@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Echo Iris</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header class="topbar">
+    <h1>Echo Iris</h1>
+    <p class="subtitle">áudio → visual 3D → inteligência</p>
+  </header>
+
+  <main class="layout">
+
+    <!-- PLAYER -->
+    <section class="panel player-panel">
+      <h2>Player</h2>
+
+<audio id="audio-el" crossorigin="anonymous" src="assets/we-on-go-lyrics.mp3">        Seu navegador não suporta áudio.
+      </audio>
+
+      <div class="player-controls">
+        <input type="file" id="file-input" accept="audio/*">
+        <button id="play-btn" disabled>▶ Play</button>
+        <button id="pause-btn" disabled>⏸ Pause</button>
+      </div>
+
+      <div class="audio-meter">
+        <span>bass: <b id="val-bass">0</b></span>
+        <span>mid: <b id="val-mid">0</b></span>
+        <span>treble: <b id="val-treble">0</b></span>
+        <span>volume: <b id="val-volume">0</b></span>
+      </div>
+    </section>
+
+    <!-- CANVAS 3D (Three.js entra aqui na Fase 1) -->
+    <section class="panel canvas-panel">
+      <h2>Visual 3D</h2>
+      <canvas id="scene-canvas"></canvas>
+    </section>
+
+    <!-- CHAT (RAG entra aqui na Fase 2) -->
+    <section class="panel chat-panel">
+      <h2>Assistente</h2>
+      <div id="chat-log" class="chat-log">
+        <p class="chat-placeholder">O agente ainda não está conectado — isso vem na Fase 2.</p>
+      </div>
+      <div class="chat-input-row">
+        <input type="text" id="chat-input" placeholder="Pergunte algo sobre a música..." disabled>
+        <button id="chat-send" disabled>Enviar</button>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

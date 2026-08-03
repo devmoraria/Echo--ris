@@ -1,0 +1,155 @@
+:root {
+  --bg: #0b0b12;
+  --panel: #15151f;
+  --border: #2a2a3a;
+  --accent: #7c5cff;
+  --text: #e8e8f0;
+  --text-dim: #9a9ab0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+.topbar {
+  padding: 24px 32px 8px;
+}
+
+.topbar h1 {
+  margin: 0;
+  font-size: 28px;
+  letter-spacing: 1px;
+}
+
+.subtitle {
+  margin: 4px 0 0;
+  color: var(--text-dim);
+  font-size: 13px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 280px 1fr 300px;
+  gap: 16px;
+  padding: 16px 32px 32px;
+  min-height: 70vh;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.panel h2 {
+  margin: 0 0 12px;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+}
+
+/* Player */
+.player-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.player-controls button {
+  background: var(--accent);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  padding: 10px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.player-controls button:disabled {
+  background: #3a3a4a;
+  cursor: not-allowed;
+}
+
+.audio-meter {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.audio-meter b {
+  color: var(--text);
+}
+
+/* Canvas 3D */
+.canvas-panel {
+  align-items: center;
+  justify-content: center;
+}
+
+#scene-canvas {
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+  border-radius: 8px;
+  background: #05050a;
+}
+
+/* Chat */
+.chat-panel {
+  justify-content: space-between;
+}
+
+.chat-log {
+  flex: 1;
+  overflow-y: auto;
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-bottom: 12px;
+}
+
+.chat-placeholder {
+  font-style: italic;
+}
+
+.chat-input-row {
+  display: flex;
+  gap: 8px;
+}
+
+#chat-input {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: #0b0b12;
+  color: var(--text);
+}
+
+#chat-send {
+  background: var(--accent);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  padding: 0 14px;
+  cursor: pointer;
+}
+
+#chat-send:disabled,
+#chat-input:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
