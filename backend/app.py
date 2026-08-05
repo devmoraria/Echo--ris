@@ -6,10 +6,12 @@ Testa com: curl -X POST http://localhost:5000/ask -H "Content-Type: application/
 """
 
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import rag
 import llm
 
 app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "*"}})  # libera chamadas vindas de outra porta/origem (o front roda separado do backend)
 
 # Constrói o índice de embeddings uma vez, no start do servidor —
 # não faz sentido reprocessar o PDF a cada pergunta.

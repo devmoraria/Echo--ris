@@ -19,7 +19,8 @@
     <section class="panel player-panel">
       <h2>Player</h2>
 
-<audio id="audio-el" crossorigin="anonymous" src="assets/we-on-go-lyrics.mp3">        Seu navegador não suporta áudio.
+      <audio id="audio-el" crossorigin="anonymous" src="assets/we-on-go-lyrics.mp3">
+        Seu navegador não suporta áudio.
       </audio>
 
       <div class="player-controls">
@@ -36,17 +37,17 @@
       </div>
     </section>
 
-    <!-- CANVAS 3D (Three.js entra aqui na Fase 1) -->
+    <!-- CANVAS 3D -->
     <section class="panel canvas-panel">
       <h2>Visual 3D</h2>
       <canvas id="scene-canvas"></canvas>
     </section>
 
-    <!-- CHAT (RAG entra aqui na Fase 2) -->
+    <!-- CHAT -->
     <section class="panel chat-panel">
       <h2>Assistente</h2>
       <div id="chat-log" class="chat-log">
-        <p class="chat-placeholder">O agente ainda não está conectado — isso vem na Fase 2.</p>
+        <p class="chat-placeholder">Pergunte algo sobre o projeto...</p>
       </div>
       <div class="chat-input-row">
         <input type="text" id="chat-input" placeholder="Pergunte algo sobre a música..." disabled>
@@ -59,5 +60,6 @@
   <script src="https://unpkg.com/three@0.152.0/build/three.min.js"></script>
   <script src="script.js"></script>
   <script src="scene3d.js"></script>
+  <script src="chat.js"></script>
 </body>
 </html>
