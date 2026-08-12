@@ -19,7 +19,7 @@
     <section class="panel player-panel">
       <h2>Player</h2>
 
-      <audio id="audio-el" crossorigin="anonymous" src="assets/we-on-go-lyrics.mp3">
+      <audio id="audio-el" src="assets/we-on-go-lyrics.mp3">
         Seu navegador não suporta áudio.
       </audio>
 
@@ -34,6 +34,10 @@
         <span>mid: <b id="val-mid">0</b></span>
         <span>treble: <b id="val-treble">0</b></span>
         <span>volume: <b id="val-volume">0</b></span>
+        <span>cor (hue): <b id="val-hue">-</b></span>
+        <span>batida: <b id="val-beat">-</b></span>
+        <span>voz/palavra: <b id="val-voice">-</b></span>
+        <span>tic: <b id="val-tic">-</b></span>
       </div>
     </section>
 
@@ -58,6 +62,16 @@
   </main>
 
   <script src="https://unpkg.com/three@0.152.0/build/three.min.js"></script>
+  <!-- Módulos de pós-processamento pra bloom (brilho) real nas estrelas.
+       São builds legadas (examples/js), compatíveis com o build não-modular
+       do three.min.js acima — scene3d.js já cai num fallback sem bloom se
+       algum desses não carregar (ex.: sem internet/CDN bloqueado). -->
+  <script src="https://unpkg.com/three@0.152.0/examples/js/shaders/CopyShader.js"></script>
+  <script src="https://unpkg.com/three@0.152.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+  <script src="https://unpkg.com/three@0.152.0/examples/js/postprocessing/EffectComposer.js"></script>
+  <script src="https://unpkg.com/three@0.152.0/examples/js/postprocessing/RenderPass.js"></script>
+  <script src="https://unpkg.com/three@0.152.0/examples/js/postprocessing/ShaderPass.js"></script>
+  <script src="https://unpkg.com/three@0.152.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
   <script src="script.js"></script>
   <script src="scene3d.js"></script>
   <script src="chat.js"></script>

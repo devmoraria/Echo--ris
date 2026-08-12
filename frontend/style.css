@@ -42,6 +42,66 @@ body {
   min-height: 70vh;
 }
 
+/* Telas médias (tablet/notebook pequeno): o visual 3D passa a ocupar a
+   largura toda, em cima; player e chat ficam lado a lado embaixo. As 3
+   colunas fixas do desktop não cabem mais sem espremer tudo. */
+@media (max-width: 1000px) {
+  .layout {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .canvas-panel {
+    grid-column: 1 / -1;
+    order: -1;
+  }
+}
+
+/* Telas pequenas (celular): tudo empilhado numa coluna só, visual 3D
+   primeiro (é o que mais importa ver), depois player, depois chat. */
+@media (max-width: 640px) {
+  .layout {
+    grid-template-columns: 1fr;
+    padding: 12px 16px 24px;
+    gap: 12px;
+    min-height: auto;
+  }
+
+  .canvas-panel {
+    grid-column: auto;
+    min-height: 300px;
+  }
+
+  .panel {
+    min-height: 260px;
+  }
+
+  .topbar {
+    padding: 16px 16px 6px;
+  }
+
+  .topbar h1 {
+    font-size: 22px;
+  }
+
+  #scene-canvas {
+    min-height: 240px;
+  }
+
+  .audio-meter {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+  }
+
+  .chat-input-row {
+    flex-wrap: wrap;
+  }
+
+  #chat-input {
+    min-width: 0;
+  }
+}
+
 .panel {
   background: var(--panel);
   border: 1px solid var(--border);
@@ -59,7 +119,6 @@ body {
   color: var(--text-dim);
 }
 
-/* Player */
 .player-controls {
   display: flex;
   flex-direction: column;
@@ -94,7 +153,6 @@ body {
   color: var(--text);
 }
 
-/* Canvas 3D */
 .canvas-panel {
   align-items: center;
   justify-content: center;
@@ -108,7 +166,6 @@ body {
   background: #05050a;
 }
 
-/* Chat */
 .chat-panel {
   justify-content: space-between;
 }
