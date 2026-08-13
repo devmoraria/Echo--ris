@@ -136,20 +136,27 @@ def _parse_ai_color_json(text):
 # a energia ao vivo só dá vida/variação em cima dela. Sem base_hue, cai no
 # comportamento antigo (hue calculado 100% a partir da energia do momento).
 
-def _heuristic_color(bass, mid, treble, volume, base_hue=None):
+def _heuristic_color(bass, mid, treble, volume, base_hue=None, vibe_weight=0.75):
     """Mapeia a energia do áudio pra uma cor, seguindo psicologia das cores básica:
     grave forte → vermelho/laranja (energia, intensidade)
     médio forte → verde/amarelo (equilíbrio, natureza)
     agudo forte → azul/roxo (calma, introspecção)
+
+    vibe_weight (0-1) vem do slider de personalização do usuário no front —
+    quanto a vibe/cor-base da música domina sobre a energia ao vivo. Antes
+    era um valor fixo (0.75); default aqui mantém o mesmo comportamento pra
+    quem não manda esse campo.
     """
     total = bass + mid + treble + 1e-6
     # hue 0 = vermelho, ~60 = amarelo, ~140 = verde, ~220 = azul, ~280 = roxo
     live_hue = (bass * 10 + mid * 130 + treble * 250) / total
 
+    vibe_weight = max(0.0, min(1.0, vibe_weight))
+
     if base_hue is not None:
-        # A vibe da música domina (75%), a energia ao vivo só empurra um
-        # pouco o tom (25%) — dá variação sem sair da identidade da faixa.
-        hue = (base_hue * 0.75 + live_hue * 0.25) % 360
+        # A vibe da música domina por vibe_weight, a energia ao vivo empurra
+        # o tom pelo restante — dá variação sem sair da identidade da faixa.
+        hue = (base_hue * vibe_weight + live_hue * (1 - vibe_weight)) % 360
     else:
         hue = live_hue
 
@@ -165,11 +172,12 @@ def _heuristic_color(bass, mid, treble, volume, base_hue=None):
     }
 
 
-def real_color_response(bass, mid, treble, volume, base_hue=None):
+def real_color_response(bass, mid, treble, volume, base_hue=None, vibe_weight=0.75):
     """Pergunta pra IA de verdade qual paleta combina com esse momento da música."""
     base_hue_txt = (
         f"A cor-base identificada pra essa música é hue={base_hue:.0f}; "
-        "varie sutilmente em torno dela, sem fugir muito da identidade dela. "
+        f"ela deve pesar {vibe_weight * 100:.0f}% na decisão final, e a energia "
+        f"ao vivo o restante ({(1 - vibe_weight) * 100:.0f}%). "
         if base_hue is not None
         else ""
     )
@@ -185,18 +193,21 @@ def real_color_response(bass, mid, treble, volume, base_hue=None):
     return _parse_ai_color_json(raw)
 
 
-def get_color_response(bass, mid, treble, volume, base_hue=None):
+def get_color_response(bass, mid, treble, volume, base_hue=None, vibe_weight=0.75):
     """Ponto único de entrada das cores em tempo real. Se a IA real falhar ou
     não estiver disponível, cai pro fallback local — isso é o item de
     resiliência que o escopo original do projeto pedia (fallback de cor se
-    a API falhar)."""
+    a API falhar).
+
+    vibe_weight (0-1) vem do slider "identidade vs. energia" do usuário no
+    front (settings.js) — repassado tanto pra IA real quanto pro fallback."""
     if USE_REAL_OCI:
         try:
-            return real_color_response(bass, mid, treble, volume, base_hue=base_hue)
+            return real_color_response(bass, mid, treble, volume, base_hue=base_hue, vibe_weight=vibe_weight)
         except Exception as e:
             print(f"[cores] IA real falhou ({e}), usando fallback local.")
-            return _heuristic_color(bass, mid, treble, volume, base_hue=base_hue)
-    return _heuristic_color(bass, mid, treble, volume, base_hue=base_hue)
+            return _heuristic_color(bass, mid, treble, volume, base_hue=base_hue, vibe_weight=vibe_weight)
+    return _heuristic_color(bass, mid, treble, volume, base_hue=base_hue, vibe_weight=vibe_weight)
 
 
 # ===== Camada de "vibe" da música (identidade de cor por faixa) =====

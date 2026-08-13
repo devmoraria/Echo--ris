@@ -8,14 +8,12 @@ venv/
 env/
 .venv/
 
-# Variáveis de ambiente — NUNCA subir isso (tem credenciais da OCI)
 .env
 .env.local
 
 # Cache de modelos baixados (sentence-transformers) — grande demais pro git
 .cache/
 
-# ---- Node / frontend (caso venha a usar no futuro) ----
 node_modules/
 npm-debug.log*
 
@@ -28,7 +26,3 @@ desktop.ini
 .vscode/
 .idea/
 *.swp
-
-# ---- Arquivos de áudio de teste grandes (opcional — ver nota abaixo) ----
-# Se quiser versionar a música de teste, comenta a linha abaixo.
-# frontend/assets/*.mp3

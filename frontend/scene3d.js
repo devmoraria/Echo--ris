@@ -233,6 +233,10 @@ async function fetchColorPalette() {
         treble,
         volume,
         base_hue: window.echoIrisBaseHue ?? null,
+        // Mesmo slider que controla o hue no front (vibe vs. energia ao
+        // vivo) — manda pro backend pra saturação/luminosidade seguirem a
+        // mesma preferência, em vez de ficar só no hue calculado aqui.
+        vibe_weight: window.echoIrisSettings?.vibeBalance ?? 0.75,
       }),
     });
     if (!response.ok) throw new Error(`status ${response.status}`);
@@ -458,6 +462,18 @@ function animate() {
   voicePulse = vocalDetector.pulse;
   ticPulse = ticDetector.pulse;
 
+  // ---- Configurações personalizáveis (settings.js) ----
+  // Lidas A CADA FRAME (não só uma vez) — assim mexer num slider reflete na
+  // cena na hora. Defaults aqui cobrem o caso de settings.js não ter
+  // carregado (CDN falhou, etc.) — a cena nunca fica travada por isso.
+  const userSettings = window.echoIrisSettings || {};
+  const speedSetting = userSettings.speed ?? 1;
+  const beatIntensitySetting = userSettings.beatIntensity ?? 1;
+  const smokeAmountSetting = userSettings.smokeAmount ?? 1;
+  const vibeBalanceSetting = userSettings.vibeBalance ?? 0.75;
+  const bloomEnabled = userSettings.bloom !== false;
+  const shakeEnabled = userSettings.cameraShake !== false;
+
   // O flash de COR decai bem mais devagar que o beatPulse — rápido demais
   // e o olho não registra que a cor mudou.
   const COLOR_FLASH_DECAY_PER_SECOND = 2.2;
@@ -485,13 +501,13 @@ function animate() {
     // fica suave.
     const style = Math.random();
     if (style < 0.25) {
-      trailBoostTarget = 1; // "estica": rastros compridos, warp dramático
+      trailBoostTarget = 1 * beatIntensitySetting; // "estica": rastros compridos, warp dramático
     } else if (style < 0.5) {
-      trailBoostTarget = -0.7; // "contrai": rastros curtos, brilho seco (punch)
+      trailBoostTarget = -0.7 * beatIntensitySetting; // "contrai": rastros curtos, brilho seco (punch)
     } else if (style < 0.75) {
-      spiralKickTarget = 1; // "espiral": giro extra no campo
+      spiralKickTarget = 1 * beatIntensitySetting; // "espiral": giro extra no campo
     } else {
-      smokeBoostTarget = 1; // "sopro": a fumaça infla e brilha por um instante
+      smokeBoostTarget = 1 * beatIntensitySetting; // "sopro": a fumaça infla e brilha por um instante
     }
   }
   if (isVoiceHit) {
@@ -517,8 +533,9 @@ function animate() {
   if (valVoice) valVoice.textContent = voiceIndicatorTimer > 0 ? 'VOZ!' : '-';
   if (valTic) valTic.textContent = ticIndicatorTimer > 0 ? 'TIC!' : '-';
 
-  // Velocidade: energia contínua + volume, com rajada extra na batida
-  const speedMultiplier = 1 + energy * 5 + smoothed.volume * 2 + beatPulse * 6;
+  // Velocidade: energia contínua + volume, com rajada extra na batida,
+  // multiplicada pela preferência de velocidade do usuário (slider).
+  const speedMultiplier = (1 + energy * 5 + smoothed.volume * 2 + beatPulse * 6) * speedSetting;
 
   // ---- Cor ao vivo ----
   hueRotation += delta * (HUE_ROTATION_BASE_SPEED + energy * HUE_ROTATION_ENERGY_SPEED);
@@ -527,12 +544,10 @@ function animate() {
   const instantHue = (spectralHue + hueRotation) % 360;
   const vibeHue = window.echoIrisBaseHue;
   const hasVibe = vibeHue !== null && vibeHue !== undefined;
-  // A vibe da música (do /vibe) dita 75% da identidade de cor, a energia ao
-  // vivo só modula os outros 25% — mesma proporção definida no guia de
-  // direção de arte (harmonia de vibe), e a mesma usada em llm.py pro
-  // /colors. Antes aqui era só 20% de vibe, então a energia do momento
-  // dominava demais e a identidade da faixa quase não aparecia.
-  const targetHue = hasVibe ? lerpHue(instantHue, vibeHue, 0.75) : instantHue;
+  // A vibe da música (do /vibe) dita, por padrão, 75% da identidade de cor —
+  // mesma proporção definida no guia de direção de arte (harmonia de vibe) —
+  // mas agora é configurável pelo usuário (slider "identidade vs. energia").
+  const targetHue = hasVibe ? lerpHue(instantHue, vibeHue, vibeBalanceSetting) : instantHue;
   displayedHue = lerpHue(displayedHue, targetHue, 0.15);
 
   // Flash de cor no evento: a cada batida OU palavra detectada, sorteia um
@@ -593,7 +608,7 @@ function animate() {
     // Brilho extra: batida/voz dão um flash geral; o tic soma um brilho só
     // nas estrelas "sorteadas" (star.sparkle) — formatos diferentes de
     // reação coexistindo na mesma cena.
-    const beatGlow = 1 + beatPulse * 1.4 + voicePulse * 0.5 + star.sparkle * 1.6;
+    const beatGlow = 1 + beatPulse * 1.4 * beatIntensitySetting + voicePulse * 0.5 + star.sparkle * 1.6;
 
     colors[base] = tmpColor.r * 0.55 * beatGlow;
     colors[base + 1] = tmpColor.g * 0.55 * beatGlow;
@@ -680,7 +695,7 @@ function animate() {
     // "Respiração": o tamanho pulsa devagar por conta própria, além de
     // reagir à música — sem isso as nuvens ficam com tamanho estático.
     const breath = 1 + 0.18 * Math.sin(t * p.breathSpeed + p.breathPhase);
-    const size = p.baseSize * (1 + energy * 0.6 + smokeBoost * 0.8) * fade * breath;
+    const size = p.baseSize * (1 + energy * 0.6 + smokeBoost * 0.8) * fade * breath * smokeAmountSetting;
     p.mesh.scale.set(size * p.stretchX, size * p.stretchY, 1);
 
     // A cor da fumaça parte do mesmo hue final da cena (coerência visual),
@@ -698,7 +713,7 @@ function animate() {
     // Opacidade contida (blending normal, várias nuvens sobrepostas) e
     // agora também multiplicada pelo proximityFade — perto do limite de
     // reciclagem, a nuvem já está bem apagada em vez de estourada.
-    p.mesh.material.opacity = Math.min(0.55, fade * proximityFade * (0.22 + smoothed.volume * 0.25 + smokeBoost * 0.25));
+    p.mesh.material.opacity = Math.min(0.55, fade * proximityFade * (0.22 + smoothed.volume * 0.25 + smokeBoost * 0.25)) * smokeAmountSetting;
   }
 
   // Drift de câmera não repetitivo
@@ -707,18 +722,23 @@ function animate() {
 
   // Shake na batida — deslocamento aleatório por cima do drift suave,
   // proporcional ao beatPulse (só o grave dispara shake de câmera; a voz só
-  // mexe na cor/brilho, pra não virar uma tremedeira constante).
+  // mexe na cor/brilho, pra não virar uma tremedeira constante). Zerado por
+  // completo quando shakeEnabled é false (não só reduzido) — ajuda quem é
+  // sensível a movimento de câmera (enxaqueca, vestibular).
   const SHAKE_MAGNITUDE = 0.18;
-  const shakeX = (Math.random() - 0.5) * 2 * SHAKE_MAGNITUDE * beatPulse;
-  const shakeY = (Math.random() - 0.5) * 2 * SHAKE_MAGNITUDE * beatPulse;
-  const shakeRotZ = (Math.random() - 0.5) * 2 * 0.03 * beatPulse;
+  const shakeAmount = shakeEnabled ? beatPulse * beatIntensitySetting : 0;
+  const shakeX = (Math.random() - 0.5) * 2 * SHAKE_MAGNITUDE * shakeAmount;
+  const shakeY = (Math.random() - 0.5) * 2 * SHAKE_MAGNITUDE * shakeAmount;
+  const shakeRotZ = (Math.random() - 0.5) * 2 * 0.03 * shakeAmount;
 
   camera.position.x = driftX + shakeX;
   camera.position.y = driftY + shakeY;
   camera.rotation.z = Math.sin(t * 0.013) * 0.05 + shakeRotZ;
 
-  // "Zoom punch" na batida — o FOV abre de repente e volta
-  camera.fov = BASE_FOV + beatPulse * 18;
+  // "Zoom punch" na batida — o FOV abre de repente e volta. Também respeita
+  // o toggle de shake (é outra forma de movimento de câmera abrupto) e a
+  // intensidade de batida configurada.
+  camera.fov = BASE_FOV + (shakeEnabled ? beatPulse * 18 * beatIntensitySetting : 0);
   camera.updateProjectionMatrix();
 
   // Giro do campo, mais forte com o grave sustentado e com a batida, e o
@@ -733,7 +753,7 @@ function animate() {
   // que ela faz parte da mesma cena, sem imitar o movimento 1:1.
   smokeGroup.rotation.z += (0.004 + smoothed.bass * 0.015 + spiralKick * 2) * delta;
 
-  if (composer) {
+  if (composer && bloomEnabled) {
     composer.render();
   } else {
     renderer.render(scene, camera);

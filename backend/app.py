@@ -71,7 +71,12 @@ def colors():
     base_hue = data.get("base_hue")
     base_hue = float(base_hue) if base_hue is not None else None
 
-    palette = llm.get_color_response(bass, mid, treble, volume, base_hue=base_hue)
+    # vibe_weight vem do slider de personalização no front (settings.js) —
+    # opcional também, cai no padrão de 75% se o front não mandar (versão
+    # antiga do front, por exemplo).
+    vibe_weight = float(data.get("vibe_weight", 0.75))
+
+    palette = llm.get_color_response(bass, mid, treble, volume, base_hue=base_hue, vibe_weight=vibe_weight)
     return jsonify(palette)
 
 
@@ -81,4 +86,11 @@ def health():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    # host="0.0.0.0" é o que permite conexões de fora da VM — com o padrão
+    # (127.0.0.1), o Flask só aceita requisições da própria máquina, e
+    # ninguém de fora conseguiria acessar o backend hospedado na OCI.
+    # debug=False em produção: o modo debug expõe um console interativo de
+    # erros no navegador, o que é um risco de segurança sério numa VM
+    # pública. Pra rodar com auto-reload durante o desenvolvimento local,
+    # use "flask --debug run" em vez de mudar isso aqui.
+    app.run(host="0.0.0.0", port=5000, debug=False)

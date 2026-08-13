@@ -153,6 +153,75 @@ body {
   color: var(--text);
 }
 
+.settings-panel {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.settings-panel h3 {
+  margin: 0 0 2px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+}
+
+.setting-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.setting-row label {
+  display: flex;
+  justify-content: space-between;
+}
+
+.setting-row label span {
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.setting-row input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+.setting-row-toggle {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.setting-row-toggle input[type="checkbox"] {
+  accent-color: var(--accent);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+#set-reset {
+  margin-top: 4px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-dim);
+  padding: 8px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+#set-reset:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
 .canvas-panel {
   align-items: center;
   justify-content: center;
