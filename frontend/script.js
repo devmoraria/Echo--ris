@@ -12,7 +12,20 @@ const valMid = document.getElementById('val-mid');
 const valTreble = document.getElementById('val-treble');
 const valVolume = document.getElementById('val-volume');
 
-const BACKEND_URL = 'http://localhost:5000';
+// Antes era fixo em 'http://localhost:5000' — funcionava só rodando tudo na
+// sua máquina. Na VM da OCI, o Nginx serve o frontend E faz proxy de
+// /ask, /vibe, /colors, /health pro gunicorn (que fica preso em
+// 127.0.0.1:5000, não exposto pra fora) — então o caminho certo pro
+// navegador do usuário é relativo, no mesmo host:porta que ele já carregou
+// o index.html. Testando local com "python app.py" direto (sem Nginx),
+// continua funcionando: cai no caso file:///localhost abaixo.
+const BACKEND_URL = (() => {
+  const { protocol, hostname } = window.location;
+  if (protocol === 'file:' || hostname === 'localhost' || hostname === '127.0.0.1') {
+    return 'http://localhost:5000';
+  }
+  return ''; // caminho relativo — o Nginx cuida do resto
+})();
 
 let audioCtx = null;
 let analyser = null;
