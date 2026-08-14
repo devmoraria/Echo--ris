@@ -1,16 +1,28 @@
 """
-Camada do LLM. Enquanto a conta OCI não libera, usa as versões mock.
-Quando liberar, troca USE_REAL_OCI pra True — tanto o chat quanto as
-cores passam a usar a IA de verdade automaticamente, sem mexer no resto
-do código (app.py e scene3d.js só conhecem get_llm_response/get_color_response/
-get_vibe_response).
+Camada do LLM. Enquanto a conta OCI não libera, usa as versões mock (ou
+Gemini como alternativa — ver LLM_PROVIDER abaixo). Quando um provedor
+real estiver configurado, tanto o chat quanto as cores passam a usar a IA
+de verdade automaticamente, sem mexer no resto do código (app.py e
+scene3d.js só conhecem get_llm_response/get_color_response/get_vibe_response).
 """
 
 import os
 import re
 import json
 
-USE_REAL_OCI = False
+# Antes era um booleano (USE_REAL_OCI = True/False) que só decidia entre
+# "IA real da OCI" e "mock". Generalizado pra um seletor de provedor —
+# assim dá pra trocar de "cérebro" sem tocar em app.py ou scene3d.js, que só
+# conhecem get_llm_response/get_color_response/get_vibe_response.
+#
+# Valores aceitos: "mock" (padrão, sem IA real), "oci" (Generative AI da
+# OCI, código original abaixo), "gemini" (fallback enquanto a OCI não
+# libera — API gratuita, sem espera de aprovação).
+#
+# Lido de variável de ambiente pra não precisar mexer no código pra trocar
+# de ambiente (local vs. VM) — cai em "mock" se LLM_PROVIDER não estiver
+# definida no .env.
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "mock").strip().lower()
 
 
 _NO_CONTEXT_REPLY = (
@@ -46,8 +58,8 @@ def mock_llm_response(prompt, has_relevant_context=True):
     CONTEXTO que já veio dentro do próprio prompt (rag.build_prompt monta
     esse prompt com "Contexto:\n...\n\nPergunta: ..."). Não é uma resposta
     gerada de verdade, mas já mostra o RAG funcionando ponta a ponta —
-    troque USE_REAL_OCI pra True quando a OCI estiver liberada pra uma
-    resposta gerada pela IA de verdade.
+    troque LLM_PROVIDER pra "oci" ou "gemini" no .env quando um provedor
+    real estiver configurado, pra uma resposta gerada pela IA de verdade.
 
     has_relevant_context vem do app.py comparando o melhor score de busca
     com um limiar mínimo — se a pergunta não tiver nada a ver com o PDF
@@ -75,7 +87,7 @@ def mock_llm_response(prompt, has_relevant_context=True):
     return f"[simulado, baseado no material do projeto]\n\n{body}"
 
 
-def real_llm_response(prompt):
+def real_llm_response_oci(prompt):
     """Chamada real à OCI Generative AI — mesma lógica do test_oci_connection.py."""
     import oci
     from dotenv import load_dotenv
@@ -113,9 +125,47 @@ def real_llm_response(prompt):
     return response.data.chat_response.choices[0].message.content[0].text
 
 
+def real_llm_response_gemini(prompt):
+    """Chamada real à API do Gemini (Google AI Studio) — fallback enquanto a
+    conta OCI não libera o Generative AI. Pega a chave de GEMINI_API_KEY no
+    .env; o modelo é configurável por GEMINI_MODEL (default: um modelo
+    rápido/gratuito, bom o bastante pra respostas de chat curtas)."""
+    import google.generativeai as genai
+    from dotenv import load_dotenv
+    load_dotenv()
+
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        raise RuntimeError("GEMINI_API_KEY não configurada no .env")
+
+    model_name = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel(model_name)
+    response = model.generate_content(prompt)
+    return response.text
+
+
+def real_llm_response(prompt):
+    """Dispatcher — escolhe o provedor real conforme LLM_PROVIDER. Separado
+    do get_llm_response() de baixo porque real_color_response() e
+    real_vibe_response() (mais abaixo) também chamam essa função pra gerar
+    a paleta/vibe com a IA real — um único ponto de troca de provedor cobre
+    chat, cores e vibe ao mesmo tempo."""
+    if LLM_PROVIDER == "oci":
+        return real_llm_response_oci(prompt)
+    if LLM_PROVIDER == "gemini":
+        return real_llm_response_gemini(prompt)
+    raise RuntimeError(
+        f"LLM_PROVIDER='{LLM_PROVIDER}' não reconhecido ou é 'mock' — "
+        "real_llm_response() não deveria ter sido chamada nesse caso."
+    )
+
+
 def get_llm_response(prompt, has_relevant_context=True):
-    """Ponto único de entrada do chat — troca o mock pela chamada real quando chegar a hora."""
-    if USE_REAL_OCI:
+    """Ponto único de entrada do chat — troca o mock pela chamada real
+    conforme LLM_PROVIDER (mock/oci/gemini)."""
+    if LLM_PROVIDER in ("oci", "gemini"):
         return real_llm_response(prompt)
     return mock_llm_response(prompt, has_relevant_context=has_relevant_context)
 
@@ -201,7 +251,7 @@ def get_color_response(bass, mid, treble, volume, base_hue=None, vibe_weight=0.7
 
     vibe_weight (0-1) vem do slider "identidade vs. energia" do usuário no
     front (settings.js) — repassado tanto pra IA real quanto pro fallback."""
-    if USE_REAL_OCI:
+    if LLM_PROVIDER in ("oci", "gemini"):
         try:
             return real_color_response(bass, mid, treble, volume, base_hue=base_hue, vibe_weight=vibe_weight)
         except Exception as e:
@@ -275,7 +325,7 @@ def real_vibe_response(song_name):
 def get_vibe_response(song_name):
     """Ponto único de entrada da vibe/cor-base de uma faixa. Mesma lógica de
     resiliência das outras camadas: se a IA real falhar, cai pro heurístico."""
-    if USE_REAL_OCI:
+    if LLM_PROVIDER in ("oci", "gemini"):
         try:
             return real_vibe_response(song_name)
         except Exception as e:
