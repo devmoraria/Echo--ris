@@ -171,9 +171,18 @@ def real_llm_response(prompt):
 
 def get_llm_response(prompt, has_relevant_context=True):
     """Ponto único de entrada do chat — troca o mock pela chamada real
-    conforme LLM_PROVIDER (mock/oci/gemini)."""
+    conforme LLM_PROVIDER (mock/oci/gemini).
+
+    Mesma lógica de resiliência das outras camadas (cores/vibe): se a IA
+    real falhar (rate limit, 503 de sobrecarga do provedor, timeout, etc.),
+    cai pro mock em vez de devolver erro 500 pro usuário — o chat continua
+    respondendo, só que em modo simulado até a próxima pergunta funcionar."""
     if LLM_PROVIDER in ("oci", "gemini"):
-        return real_llm_response(prompt)
+        try:
+            return real_llm_response(prompt)
+        except Exception as e:
+            print(f"[chat] IA real falhou ({e}), usando fallback simulado.")
+            return mock_llm_response(prompt, has_relevant_context=has_relevant_context)
     return mock_llm_response(prompt, has_relevant_context=has_relevant_context)
 
 
