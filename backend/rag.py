@@ -97,7 +97,11 @@ def build_prompt(question, retrieved_chunks):
     context = "\n\n".join(text for score, text in retrieved_chunks)
     return (
         "Use o contexto abaixo pra responder a pergunta. "
-        "Se a resposta não estiver no contexto, diga que não sabe.\n\n"
+        "Se a resposta não estiver no contexto, diga que não sabe. "
+        "Responda de forma clara e didática, como se estivesse explicando pra "
+        "alguém conhecendo o projeto agora — organize em tópicos com **negrito** "
+        "nos termos-chave quando isso ajudar a explicação, mas sem exagerar na "
+        "extensão.\n\n"
         f"Contexto:\n{context}\n\n"
         f"Pergunta: {question}"
     )

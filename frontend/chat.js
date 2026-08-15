@@ -30,6 +30,62 @@ if (!chatLog || !chatInput || !chatSend) {
 
 let firstMessageSent = false;
 
+// Mini-renderizador de markdown — só o essencial que o Gemini usa nas
+// respostas (negrito, listas com * ou -, listas numeradas, parágrafos).
+// Sempre escapa o texto cru ANTES de aplicar qualquer tag, pra nunca
+// interpretar o conteúdo da resposta como HTML de verdade (mesmo vindo
+// da IA, não custa nada tratar como não-confiável).
+function escapeHtml(str) {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function inlineFormat(str) {
+  // só negrito por enquanto — itálico com * simples é arriscado de
+  // detectar corretamente quando a mesma linha também tem marcador de
+  // lista, então preferi deixar de fora a ambiguidade.
+  return str.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+}
+
+function renderMarkdown(text) {
+  const lines = escapeHtml(text).split(/\r?\n/);
+  let html = '';
+  let listType = null; // 'ul' | 'ol' | null
+
+  const closeList = () => {
+    if (listType) {
+      html += `</${listType}>`;
+      listType = null;
+    }
+  };
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (line === '') {
+      closeList();
+      continue;
+    }
+
+    const bulletMatch = line.match(/^[*-]\s+(.*)/);
+    const numberedMatch = line.match(/^\d+[.)]\s+(.*)/);
+
+    if (bulletMatch) {
+      if (listType !== 'ul') { closeList(); html += '<ul>'; listType = 'ul'; }
+      html += `<li>${inlineFormat(bulletMatch[1])}</li>`;
+    } else if (numberedMatch) {
+      if (listType !== 'ol') { closeList(); html += '<ol>'; listType = 'ol'; }
+      html += `<li>${inlineFormat(numberedMatch[1])}</li>`;
+    } else {
+      closeList();
+      html += `<p>${inlineFormat(line)}</p>`;
+    }
+  }
+  closeList();
+  return html;
+}
+
 function addMessage(text, from) {
   if (!chatLog) return;
 
@@ -38,10 +94,17 @@ function addMessage(text, from) {
     firstMessageSent = true;
   }
 
-  const msg = document.createElement('p');
-  msg.textContent = (from === 'user' ? 'Você: ' : 'Echo Iris: ') + text;
+  const msg = document.createElement('div');
   msg.style.marginBottom = '8px';
   msg.style.color = from === 'user' ? '#e8e8f0' : '#7c5cff';
+
+  if (from === 'user') {
+    // Mensagem do usuário: texto puro, sem markdown — não precisa
+    // renderizar nada, e evita qualquer ambiguidade de conteúdo digitado.
+    msg.textContent = 'Você: ' + text;
+  } else {
+    msg.innerHTML = '<strong>Echo Iris:</strong> ' + renderMarkdown(text);
+  }
 
   chatLog.appendChild(msg);
   chatLog.scrollTop = chatLog.scrollHeight;
