@@ -251,6 +251,24 @@ body {
   font-style: italic;
 }
 
+.chat-log p {
+  margin: 4px 0;
+}
+
+.chat-log ul,
+.chat-log ol {
+  margin: 4px 0 8px 20px;
+  padding: 0;
+}
+
+.chat-log li {
+  margin: 2px 0;
+}
+
+.chat-log strong {
+  color: var(--text);
+}
+
 .chat-input-row {
   display: flex;
   gap: 8px;
