@@ -226,7 +226,7 @@ def _heuristic_color(bass, mid, treble, volume, base_hue=None, vibe_weight=0.75)
     else:
         hue = live_hue
 
-    saturation = min(1.0, 0.5 + volume * 0.5)
+    saturation = min(0.9, 0.5 + volume * 0.5)  # base.pdf: S entre 0.50 e 0.90
     lightness = 0.5 + volume * 0.15
 
     return {
@@ -260,19 +260,6 @@ def real_color_response(bass, mid, treble, volume, base_hue=None, vibe_weight=0.
 
 
 def get_color_response(bass, mid, treble, volume, base_hue=None, vibe_weight=0.75):
-    """Ponto único de entrada das cores em tempo real. Se a IA real falhar ou
-    não estiver disponível, cai pro fallback local — isso é o item de
-    resiliência que o escopo original do projeto pedia (fallback de cor se
-    a API falhar).
-
-    vibe_weight (0-1) vem do slider "identidade vs. energia" do usuário no
-    front (settings.js) — repassado tanto pra IA real quanto pro fallback."""
-    if LLM_PROVIDER in ("oci", "gemini"):
-        try:
-            return real_color_response(bass, mid, treble, volume, base_hue=base_hue, vibe_weight=vibe_weight)
-        except Exception as e:
-            print(f"[cores] IA real falhou ({e}), usando fallback local.")
-            return _heuristic_color(bass, mid, treble, volume, base_hue=base_hue, vibe_weight=vibe_weight)
     return _heuristic_color(bass, mid, treble, volume, base_hue=base_hue, vibe_weight=vibe_weight)
 
 
