@@ -10,6 +10,14 @@ import os
 import re
 import json
 
+from dotenv import load_dotenv
+
+# Precisa rodar ANTES de ler LLM_PROVIDER logo abaixo — sem isso, o .env só
+# seria carregado dentro de real_llm_response_oci/real_llm_response_gemini,
+# tarde demais: LLM_PROVIDER já teria sido fixado em "mock" no import do
+# módulo (get_llm_response nunca chegaria a chamar essas funções).
+load_dotenv()
+
 # Antes era um booleano (USE_REAL_OCI = True/False) que só decidia entre
 # "IA real da OCI" e "mock". Generalizado pra um seletor de provedor —
 # assim dá pra trocar de "cérebro" sem tocar em app.py ou scene3d.js, que só
@@ -90,8 +98,6 @@ def mock_llm_response(prompt, has_relevant_context=True):
 def real_llm_response_oci(prompt):
     """Chamada real à OCI Generative AI — mesma lógica do test_oci_connection.py."""
     import oci
-    from dotenv import load_dotenv
-    load_dotenv()
 
     compartment_id = os.getenv("OCI_COMPARTMENT_ID")
     region = os.getenv("OCI_REGION", "us-chicago-1")
@@ -135,8 +141,6 @@ def real_llm_response_gemini(prompt):
     o pacote antigo "google-generativeai" foi descontinuado pela Google e
     parou de dar acesso a modelos novos pra contas criadas recentemente."""
     from google import genai
-    from dotenv import load_dotenv
-    load_dotenv()
 
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
