@@ -6,4 +6,4 @@ oci
 pypdf
 sentence-transformers
 numpy
-google-generativeai
+google-genai
