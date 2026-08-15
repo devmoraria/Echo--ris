@@ -1,4 +1,4 @@
-flask
+﻿flask
 flask-cors
 gunicorn
 python-dotenv
@@ -7,3 +7,4 @@ pypdf
 sentence-transformers
 numpy
 google-genai
+cohere
