@@ -128,9 +128,13 @@ def real_llm_response_oci(prompt):
 def real_llm_response_gemini(prompt):
     """Chamada real à API do Gemini (Google AI Studio) — fallback enquanto a
     conta OCI não libera o Generative AI. Pega a chave de GEMINI_API_KEY no
-    .env; o modelo é configurável por GEMINI_MODEL (default: um modelo
-    rápido/gratuito, bom o bastante pra respostas de chat curtas)."""
-    import google.generativeai as genai
+    .env; o modelo é configurável por GEMINI_MODEL (default: modelo estável
+    mais recente disponível pra novas contas na API gratuita).
+
+    Usa o SDK "google-genai" (pacote novo, `from google import genai`) —
+    o pacote antigo "google-generativeai" foi descontinuado pela Google e
+    parou de dar acesso a modelos novos pra contas criadas recentemente."""
+    from google import genai
     from dotenv import load_dotenv
     load_dotenv()
 
@@ -138,11 +142,10 @@ def real_llm_response_gemini(prompt):
     if not api_key:
         raise RuntimeError("GEMINI_API_KEY não configurada no .env")
 
-    model_name = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+    model_name = os.getenv("GEMINI_MODEL", "gemini-3.5-flash")
 
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel(model_name)
-    response = model.generate_content(prompt)
+    client = genai.Client(api_key=api_key)
+    response = client.models.generate_content(model=model_name, contents=prompt)
     return response.text
 
 
