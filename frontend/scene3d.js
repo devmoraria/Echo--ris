@@ -224,7 +224,7 @@ const COLOR_FETCH_INTERVAL = 4000; // ms
 async function fetchColorPalette() {
   try {
     const { bass, mid, treble, volume } = smoothed;
-    const response = await fetch('http://localhost:5000/colors', {
+    const response = await fetch(`${BACKEND_URL}/colors`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

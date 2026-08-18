@@ -108,9 +108,15 @@
   <script src="https://unpkg.com/three@0.152.0/examples/js/postprocessing/RenderPass.js"></script>
   <script src="https://unpkg.com/three@0.152.0/examples/js/postprocessing/ShaderPass.js"></script>
   <script src="https://unpkg.com/three@0.152.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
-  <script src="script.js"></script>
-  <script src="settings.js"></script>
-  <script src="scene3d.js"></script>
-  <script src="chat.js"></script>
+  <!-- ?v= nos scripts locais: sem isso, navegadores (principalmente em
+       redes com proxy/cache agressivo, comum em VM/rede corporativa) podem
+       continuar servindo uma versão em cache do JS mesmo depois de um
+       deploy novo — foi exatamente o que causou o BACKEND_URL "antigo"
+       (localhost hardcoded) reaparecer depois do fix já estar no servidor.
+       TROCAR ESTE NÚMERO A CADA DEPLOY que altera JS. -->
+  <script src="script.js?v=2"></script>
+  <script src="settings.js?v=2"></script>
+  <script src="scene3d.js?v=2"></script>
+  <script src="chat.js?v=2"></script>
 </body>
 </html>
