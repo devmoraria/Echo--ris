@@ -1,9 +1,12 @@
-flask
+--extra-index-url https://download.pytorch.org/whl/cpu
+﻿flask
 flask-cors
 gunicorn
 python-dotenv
 oci
 pypdf
+torch
 sentence-transformers
 numpy
 google-genai
+cohere
